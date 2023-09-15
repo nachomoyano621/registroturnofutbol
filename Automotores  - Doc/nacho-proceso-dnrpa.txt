@@ -1,0 +1,198 @@
+      *-----------------------------------------------------------------
+      * FD PARA EL ARCHIVO TXT QUE SE GENERA EN ESTE PROCESO
+      *-----------------------------------------------------------------
+       fd ROBPOLI
+           record contains 600 characters;
+           label record is standard;
+           data record is REG-ROBPOLI.
+       01 REG-ROBPOLI.
+           02 TIPO              PIC X.
+           02 DOMINIO           PIC X(8).
+           02 FECHA-ROBO        PIC 9(8).
+           02 PAIS              PIC XX.
+           02 CLASE             PIC X(20).
+           02 MARCA-2           PIC X(20).
+           02 MODELO            PIC X(10).
+           02 ANIO-MOD          PIC 9(4).
+           02 COLOR             PIC X(10).
+           02 MOTOR             PIC X(30).
+           02 CHASIS            PIC X(30).
+           02 NOMBRE-DAM        PIC X(25).
+           02 TEL-DAM           PIC X(15).
+           02 DOMICILIO-DAM     PIC X(25).
+           02 DELITO            PIC X(25).
+           02 LUGAR-HECHO       PIC X(25).
+           02 DEPENDENCIA       PIC X(25).
+           02 JUEZ              PIC X(15).
+           02 SECRETARIA        PIC X(15).
+           02 FECHA-CARGA       PIC 9(8).
+           02 FECHA-S-E         PIC 9(8).
+           02 MOTOR-S-E         PIC X(30).
+           02 CHASIS-S-E        PIC X(30).
+           02 DEPENDENCIA-S-E   PIC X(25).
+           02 FECHA-CARGA-S-E   PIC 9(8).
+           02 ORIGEN            PIC 9(2).
+           02 FECHAN            PIC 9(8).
+           02 PROCESADO         PIC X.
+      *------
+      *   LEE DE VEHICULOS - PEDIDOS DE SECUESTROS VIGENTES
+      *--**--**--**--**--*
+       PPIO-MIGRA-VEHICULOS.
+      *-------
+           move 0 to totalsec.
+           CALL WOWSETPROP USING WIN-RETURN CMD-GENERA-H "ENABLED" 0.
+      *-------
+           ACCEPT FECHA-HORA FROM DATE-AND-TIME.
+ 
+      ******* ME POSICIONO EN LA FECHA DESDE *********
+           MOVE fecha-desde TO fec-alt-sec.
+           START VEHICULO KEY IS >= fec-alt-sec INVALID
+                       GO FIN-MIGRA-VEHICULOS.
+ 
+       LEE-SIG-VEHICULO.
+           READ VEHICULO NEXT AT END GO FIN-MIGRA-VEHICULOS.
+
+           ADD 1 TO IDX.
+           COMPUTE PORCE-PROGRESO ROUNDED =
+                    100 * IDX / NRO-REGISTROS.
+           CALL WOWSETPROP USING WIN-RETURN BPROG-H "VALUE"
+                    PORCE-PROGRESO END-CALL.
+ 
+           IF (fec-alt-sec >= fecha-desde) AND (fec-alt-sec
+                <= fecha-hasta)
+               INITIALIZE REG-ROBPOLI
+               INITIALIZE reg-enviostxt
+      *************************  EXTRAE DATOS **************************
+            EVALUATE desc-vehi-sec
+                WHEN 1 MOVE "A" TO TIPO
+                WHEN 2 MOVE "M" TO TIPO
+                WHEN OTHER MOVE "Q" TO TIPO
+            END-EVALUATE
+      ****
+
+      
+            IF nro-patte-sec NOT = SPACES
+              MOVE nro-patte-sec TO DOMINIO-AUX1
+              PERFORM SACA-COMA-DOMINIO THRU FIN-SACA-COMA-DOMINIO
+            ELSE
+                IF nro-patte-ant NOT = SPACES
+                   MOVE nro-patte-ant TO DOMINIO-AUX1
+                   PERFORM SACA-COMA-DOMINIO THRU FIN-SACA-COMA-DOMINIO
+                ELSE
+                   MOVE SPACES TO DOMINIO
+                END-IF
+            END-IF
+            move dominio to nro-patte-sec-denv-txt
+      ****
+      *        IF nro-patte-sec = spaces and nro-patte-ant = spaces
+      *            move nro-ficha-sec to w-msg
+      *            perform msg-stop
+      *        end-if
+      ******
+ 
+              MOVE nro-ficha-sec TO nro-ficha-sec-denv-txt
+              move 0 to nro-ficha-sine-denv-txt
+      ****
+              move fec-alt-sec to FECHA-ROBO
+      ****
+              MOVE "AR" TO PAIS
+      ****
+              MOVE ano-vehi-sec TO ANIO-MOD, ano-vehi-sec-denv-txt
+      ****
+              MOVE nro-motor-sec TO MOTOR, nro-motor-sec-denv-txt
+      ****
+              MOVE nro-chasis-sec TO CHASIS, nro-chasis-sec-denv-txt
+      ****
+              MOVE Carat-hech-sec TO carat-hech-sec-denv-txt
+ 
+              MOVE spaces to DELITO
+      ****
+              MOVE Lugar-hech-sec TO LUGAR-HECHO
+      ****
+             MOVE depen-hech-sec TO DEPENDENCIA, depen-hech-sec-denv-txt
+      ****
+              MOVE juez-intr-sec TO JUEZ, juez-intr-sec-denv-txt
+      ****
+              MOVE secr-intr-sec TO SECRETARIA
+      ****
+              move fec-alt-sec to FECHA-CARGA
+      ****
+              move zeroes to FECHA-S-E, FECHA-CARGA-S-E
+      ****
+              move spaces to MOTOR-S-E, CHASIS-S-E, DEPENDENCIA-S-E
+      ****
+              move spaces to moti-his-baj-denv-txt
+      ****
+              move 21 to origen
+      ****
+              move fechan-aux to fechan
+      ****
+              MOVE cod-ureg-sec TO cod-ureg-sec-denv-txt
+      ****
+              MOVE Marc-vehi-sec TO cod-mar-vehi
+              READ mar-vehi INVALID KEY
+                CONTINUE
+              NOT INVALID KEY
+               MOVE nom-mar-vehi TO MARCA-2, marc-vehi-sec-denv-txt
+              END-READ
+      ****
+              MOVE Colo-vehi-sec TO cod-col-vehi
+              READ col-vehi INVALID KEY
+                CONTINUE
+              NOT INVALID KEY
+               MOVE nom-col-vehi TO COLOR, colo-vehi-sec-denv-txt
+              END-READ
+      ****
+              MOVE mode-vehi-sec TO cod-mod-vehi
+              READ mod-vehi INVALID KEY
+                CONTINUE
+              NOT INVALID KEY
+               MOVE nom-mod-vehi TO MODELO, mode-vehi-sec-denv-txt
+              END-READ
+      ****
+              MOVE nro-ficha-sec TO nro-ficha-danm
+              perform lee-damnificado thru fin-lee-damnificado
+      ****
+              MOVE nro-ficha-sec TO nro-ficha-denu
+              perform lee-denunciante thru fin-lee-denunciante
+      *****
+             evaluate desc-vehi-sec
+              when 1
+                  move tipo-vehi-sec to cod-tip-vehi
+                  READ TIP-VEHI INVALID continue
+                  not invalid
+                  move nom-tip-vehi to CLASE, descripcion-sec-denv-txt
+                  end-read
+              when 2
+                  move tipo-vehi-sec to cod-tip-mot
+                  READ TIP-MOTO INVALID CONTINUE
+                  not invalid
+                  move nom-tip-mot to CLASE, descripcion-sec-denv-txt
+                  end-read
+              when 3
+                  move tipo-vehi-sec to cod-tip-tea
+                  READ TIP-AGRI INVALID CONTINUE
+                  not invalid
+                  move nom-tip-tea to CLASE, descripcion-sec-denv-txt
+                  end-read
+              when 4
+                  move tipo-vehi-sec to cod-tip-tev
+                  READ TIP-VIAL INVALID CONTINUE
+                  not invalid
+                  move nom-tip-tev to CLASE, descripcion-sec-denv-txt
+                  end-read
+              end-evaluate
+ 
+      ******************************************************************
+              MOVE 1 TO PROCESADO
+      *****
+              WRITE REG-ROBPOLI
+              WRITE reg-enviostxt
+ 
+              ADD 1 TO registros, totalsec.
+      *****
+              GO LEE-SIG-VEHICULO.
+ 
+      *      END-IF.
+       FIN-MIGRA-VEHICULOS.
+      *--**--**--**--**--*
